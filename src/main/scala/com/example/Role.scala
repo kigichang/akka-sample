@@ -80,6 +80,9 @@ object Reporter {
   val props = Props[Reporter]
 }
 
+/**
+ * Lookup 版的記者
+ */
 class LookupReporter(penguins: Array[String]) extends Reporter {
 
   var count = 0
@@ -120,6 +123,9 @@ object LookupReporter {
   def apply(penguins: Array[String]) = Props(classOf[LookupReporter], penguins)
 }
 
+/**
+ * 企鵝王
+ */
 class PenguinKing(count: Int, reporter: ActorRef) extends Actor {
 
   def depoly = {
@@ -151,6 +157,9 @@ object PenguinKing {
   def apply(count: Int, reporter: ActorRef) = Props(classOf[PenguinKing], count, reporter)
 }
 
+/**
+ * Depolyment 版記者
+ */
 class DepolyReporter extends Reporter {
 
   def myReceive: Actor.Receive = {
