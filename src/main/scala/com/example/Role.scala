@@ -1,23 +1,53 @@
 package com.example
 
-import akka.actor.Actor
-import akka.actor.Props
-import akka.actor.Identify
-import scala.concurrent.duration.DurationInt
-import akka.actor.ActorIdentity
 import scala.concurrent.duration.Duration
+import scala.concurrent.duration.DurationInt
+
+import akka.actor.Actor
+import akka.actor.ActorIdentity
 import akka.actor.ActorRef
+import akka.actor.ActorSelection.toScala
+import akka.actor.Identify
+import akka.actor.OneForOneStrategy
+import akka.actor.PoisonPill
+import akka.actor.Props
+import akka.actor.SupervisorStrategy.Escalate
+import akka.actor.SupervisorStrategy.Restart
+import akka.actor.SupervisorStrategy.Resume
+import akka.actor.SupervisorStrategy.Stop
+import akka.actor.Terminated
+import akka.actor.actorRef2Scala
+import akka.routing.RoundRobinRoutingLogic
+import akka.routing.Router
+
+class DontBotherMeException extends Exception
+
+class ExplodeException extends Exception
+
+class IamGodException extends Exception
 
 /**
  * 企鵝
  */
 class Penguin(val name: String) extends Actor {
+  var count = 0
+  var hits = 0
+
   def receive: Actor.Receive = {
     case Interest =>
+      count += 1
+
       println(s"$name got Interest")
       sender() ! Three(name, "吃飯", "睡覺", "打東東")
 
     case Why =>
+
+    case QueryCount =>
+      sender ! Counter(name, count)
+
+    case Hit =>
+      hits += 1
+      println(s"$name got Hit")
 
     case _ =>
   }
@@ -36,8 +66,9 @@ object Penguin {
  */
 class DongDong extends Penguin("東東") {
 
-  override def receive = {
+  def myReceive: Actor.Receive = {
     case Interest =>
+      count += 1
       println(s"$name got Interest")
       sender() ! Two(name, "吃飯", "睡覺")
 
@@ -45,8 +76,22 @@ class DongDong extends Penguin("東東") {
       println(s"$name got Why")
       sender() ! Because(name, s"我就是【${name}】")
 
-    case _ =>
+    case Hit =>
+      println(s"$name got Hit")
+      hits += 1
+
+      if (hits == 4)
+        throw new DontBotherMeException
+      else if (hits == 6)
+        throw new ExplodeException
+      else if (hits > 6)
+        throw new IamGodException
+      else
+        sender ! DontHitMe(name, hits)
   }
+
+  override def receive = myReceive orElse super.receive
+
 }
 
 object DongDong {
@@ -72,7 +117,16 @@ class Reporter extends Actor {
     case Because(name, msg) =>
       println(s"${name}: ${msg}")
 
+    case Counter(name, count) =>
+      println(s"$name: $count")
+
+    case DontHitMe(name, hits) =>
+      println(s"$name hit $hits")
     case _ =>
+  }
+  
+  override def preStart() {
+    println("Reporter start")
   }
 }
 
@@ -128,6 +182,14 @@ object LookupReporter {
  */
 class PenguinKing(count: Int, reporter: ActorRef) extends Actor {
 
+  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
+    //AllForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
+    case _: DontBotherMeException => Resume
+    case _: ExplodeException => Restart
+    case _: IamGodException => Stop
+    case _: Exception => Escalate
+  }
+
   def depoly = {
     for (i <- 0 until count - 1) {
       val penguin = context.actorOf(Penguin(s"penguin-$i"))
@@ -137,19 +199,23 @@ class PenguinKing(count: Int, reporter: ActorRef) extends Actor {
     }
 
     val dongdong = context.actorOf(DongDong.props)
-    
+
     dongdong ! Identify(dongdong.path.toString)
   }
 
   depoly
-  
+
   def receive: Actor.Receive = {
     case ActorIdentity(path, Some(actor)) =>
       println(s"$path found")
-      reporter ! PenguinReady(path.toString)
-      
+      reporter ! PenguinReady(actor)
+
     case ActorIdentity(path, None) =>
       println(s"$path not found")
+  }
+  
+  override def preStart() {
+    println("PenguinKing start")
   }
 }
 
@@ -158,17 +224,62 @@ object PenguinKing {
 }
 
 /**
+ * 企鵝總管
+ */
+class PenguinManager extends Actor {
+  var router = Router(RoundRobinRoutingLogic())
+
+  def receive: Actor.Receive = {
+    case PenguinReady(actor) =>
+      context watch actor
+      router = router.addRoutee(actor)
+      println("manager watch " + actor.path)
+
+    case Terminated(actor) =>
+      println("manager remove " + actor.path)
+      router = router.removeRoutee(actor)
+
+    case Interest =>
+      router.route(Interest, sender)
+
+    case QueryCount =>
+      router.routees foreach { actor =>
+        actor.send(QueryCount, sender)
+      }
+
+    case Hit =>
+      router.route(Hit, sender)
+
+    case KillOne =>
+      router.routees(0).send(PoisonPill, self)
+
+    case _ =>
+  }
+  
+  override def preStart() {
+    println("PenguinManager start")
+  }
+}
+
+object PenguinManager {
+  val props = Props[PenguinManager]
+}
+
+/**
  * Depolyment 版記者
  */
 class DepolyReporter extends Reporter {
 
   def myReceive: Actor.Receive = {
-    case PenguinReady(path) =>
-      val actor = context.actorSelection(path)
+    case PenguinReady(actor) =>
       actor ! Interest
   }
 
   override def receive = myReceive orElse super.receive
+  
+  override def preStart() {
+    println("DepolyReporter start")
+  }
 }
 
 object DepolyReporter {
