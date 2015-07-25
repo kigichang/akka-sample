@@ -25,3 +25,5 @@ desktop.ini
 *.log
 *.csv
 *.xlsx
+.cache-main
+.cache-tests
