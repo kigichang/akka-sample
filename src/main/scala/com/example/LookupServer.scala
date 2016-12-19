@@ -1,9 +1,12 @@
 package com.example
 
 import com.typesafe.config.ConfigFactory
-
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import scala.io.StdIn
 
 object LookupServer {
 
@@ -20,5 +23,9 @@ object LookupServer {
 
     penguins(9) = system.actorOf(DongDong.props, "dongdong")
     println(penguins(9).path)
+
+    StdIn.readLine()
+    Await.result(system.terminate(), Duration.Inf)
+    println("end")
   }
 }

@@ -2,6 +2,10 @@ package com.example
 
 import akka.actor.ActorSystem
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import scala.io.StdIn
+
 object SupervisorDemo {
   
   def main(args: Array[String]) {
@@ -12,13 +16,13 @@ object SupervisorDemo {
     val king = system.actorOf(PenguinKing(10, manager), "penguin-king")
     
     val reporter = system.actorOf(Reporter.props)
-    
-    Thread.sleep(5000)
+
+    StdIn.readLine()
     
     (1 to 100) foreach { i =>
       manager.tell(Hit, reporter)
     }
-    
-    system.awaitTermination()
+
+    Await.result(system.terminate(), Duration.Inf)
   }
 }

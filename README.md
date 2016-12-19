@@ -1,4 +1,4 @@
-# Akka 2.3.11 - Joke 版
+activator-akka-scala-seed
+=========================
 
-使用 Akka 2.3.11 重新改寫 Demo Akka。
-
+A minimal seed template for an Akka with Scala build 

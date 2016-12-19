@@ -2,6 +2,10 @@ package com.example
 
 import akka.actor.ActorSystem
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import scala.io.StdIn
+
 object RouterDemo {
 
   def main(args: Array[String]) {
@@ -18,16 +22,17 @@ object RouterDemo {
     (1 to 100) foreach { i =>
       manager.tell(Interest, reporter)
     }
-    
-    Thread.sleep(5000)
-    
-    
+
+    StdIn.readLine()
+
     manager.tell(QueryCount, reporter)
-    
-    Thread.sleep(5000)
+
+    StdIn.readLine()
     
     manager.tell(KillOne, reporter)
-    
-    system.awaitTermination()
+
+    StdIn.readLine()
+
+    Await.result(system.terminate(), Duration.Inf)
   }
 }

@@ -1,12 +1,13 @@
 package com.example
 
-import scala.concurrent.duration.DurationInt
-
+import scala.concurrent.duration.{Duration, DurationInt}
 import akka.actor.Actor
 import akka.actor.ActorSystem
 import akka.actor.Inbox
 import akka.actor.Props
 import akka.actor.actorRef2Scala
+
+import scala.concurrent.Await
 
 case class ToWhom(name: String)
 case class Response(msg: String)
@@ -55,8 +56,7 @@ object HelloWorld {
     println(msg)
 
     /* 記得要 shutdown, 要不然程式不會結束 */
-    system.shutdown
-
+    Await.result(system.terminate(), Duration.Inf)
     println("end")
   }
 

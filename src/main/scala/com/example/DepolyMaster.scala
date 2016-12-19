@@ -2,6 +2,9 @@ package com.example
 
 import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import scala.io.StdIn
 
 object DepolyMaster {
 
@@ -11,11 +14,10 @@ object DepolyMaster {
     val reporter = system.actorOf(DepolyReporter.props)
     
     val king = system.actorOf(PenguinKing(10, reporter), "penguin-king")
-    
-    
-    Thread.sleep(10 * 1000)
-    
-    system.shutdown()
+
+    StdIn.readLine()
+    Await.result(system.terminate(), Duration.Inf)
+
     println("end")
   }
 }
