@@ -1,4 +1,4 @@
 activator-akka-scala-seed
 =========================
 
-A minimal seed template for an Akka with Scala build 
+Akka Demo with Akka 2.4.14
