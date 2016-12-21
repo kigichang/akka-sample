@@ -17,7 +17,7 @@ object LookupServer {
     val penguins = new Array[ActorRef](10)
 
     for (i <- 0 to 8) {
-      penguins(i) = system.actorOf(Penguin(s"Penguin-$i"), s"penguin-$i")
+      penguins(i) = system.actorOf(Penguin.props(s"Penguin-$i"), s"penguin-$i")
       println(penguins(i).path)
     }
 

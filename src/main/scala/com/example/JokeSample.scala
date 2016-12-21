@@ -17,7 +17,7 @@ object JokeSample {
     val penguins = new Array[ActorRef](10)
 
     for (i <- 0 to 8) {
-      penguins(i) = system.actorOf(Penguin(s"Penguin-${i}"))
+      penguins(i) = system.actorOf(Penguin.props(s"Penguin-${i}"))
     }
 
     penguins(9) = system.actorOf(DongDong.props)

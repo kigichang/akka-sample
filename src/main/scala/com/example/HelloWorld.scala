@@ -45,9 +45,9 @@ object HelloWorld {
     val inbox = Inbox.create(system)
     // 以下是多種傳 message 方式，且都是 non-blocking (Fire-and-Forgot)。
     // 方法1
-    inbox.send(actor, ToWhom("小明"))
+    //inbox.send(actor, ToWhom("小明"))
     // 方法2
-    //actor.!(ToWhom("小華"))(inbox.getRef)
+    actor.!(ToWhom("小華"))(inbox.getRef)
     // 方法3
     //actor.tell(ToWhom("東東"), inbox.getRef)
 

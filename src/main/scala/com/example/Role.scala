@@ -58,7 +58,8 @@ class Penguin(val name: String) extends Actor {
 }
 
 object Penguin {
-  def apply(name: String): Props = Props(classOf[Penguin], name)
+  //def apply(name: String): Props = Props(classOf[Penguin], name)
+  def props(name: String): Props = Props(classOf[Penguin], name)
 }
 
 /**
@@ -192,7 +193,7 @@ class PenguinKing(count: Int, reporter: ActorRef) extends Actor {
 
   def depoly = {
     for (i <- 0 until count - 1) {
-      val penguin = context.actorOf(Penguin(s"penguin-$i"))
+      val penguin = context.actorOf(Penguin.props(s"penguin-$i"))
 
       penguin ! Identify(penguin.path.toString)
 
