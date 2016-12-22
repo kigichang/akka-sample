@@ -33,7 +33,7 @@ class Penguin(val name: String) extends Actor {
   var count = 0
   var hits = 0
 
-  def receive: Actor.Receive = {
+  override def receive: Actor.Receive = {
     case Interest =>
       count += 1
 
@@ -103,7 +103,7 @@ object DongDong {
  * 記者
  */
 class Reporter extends Actor {
-  def receive: Actor.Receive = {
+  override def receive: Actor.Receive = {
 
     /* 有三個興趣的回覆 */
     case Three(name, a, b, c) =>
@@ -230,7 +230,7 @@ object PenguinKing {
 class PenguinManager extends Actor {
   var router = Router(RoundRobinRoutingLogic())
 
-  def receive: Actor.Receive = {
+  override def receive: Actor.Receive = {
     case PenguinReady(actor) =>
       context watch actor
       router = router.addRoutee(actor)
