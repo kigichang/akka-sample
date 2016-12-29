@@ -16,12 +16,15 @@ object TestHook {
 
   case class Counter(n: Int)
 
-
   class Child extends Actor {
+    var count = 0
+
     override def receive = {
       case Counter(n) =>
-        println(s"$n")
+        count += 1
+        println(s"current count: $count")
 
+        println(s"$n")
         if (n == 2) {
           Thread.sleep(1000)
           throw new NullPointerException(s"$n")
@@ -52,7 +55,7 @@ object TestHook {
     override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
       case NonFatal(ex) =>
         println(s"catch ex: ${ex.toString}")
-        Restart
+        Escalate
       case _ =>
         Escalate
     }
@@ -67,6 +70,17 @@ object TestHook {
     override def receive = {
       case _ =>
     }
+
+    override def preStart(): Unit = {
+      println("parent pre start")
+      super.preStart()
+    }
+
+    override def postStop(): Unit = {
+      println("parent post stop")
+      super.postStop()
+    }
+
   }
 
   def main(args: Array[String]): Unit = {
