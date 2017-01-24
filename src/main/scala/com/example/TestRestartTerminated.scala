@@ -1,18 +1,19 @@
 package com.example
 
-import akka.actor.SupervisorStrategy.{Escalate, Restart, Resume, Stop}
-import akka.actor.{Actor, ActorSystem, OneForOneStrategy, Props}
+import akka.actor.{Actor, ActorSystem, OneForOneStrategy, Props, Terminated}
+import akka.actor.SupervisorStrategy.{Escalate, Restart, Stop}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.concurrent.duration.DurationInt
 import scala.io.StdIn
 import scala.util.control.NonFatal
+import scala.concurrent.duration._
 
 /**
-  * Created by kigi on 22/12/2016.
+  * Created by kigi on 20/01/2017.
   */
-object TestHook {
+object TestRestartTerminated {
+
 
   case class Counter(n: Int)
 
@@ -60,14 +61,17 @@ object TestHook {
         Escalate
     }
 
-    val child = context.actorOf(Props[Child])
+    val child = context.actorOf(Props[Child], "children")
+    context watch child
 
-    (1 to 100) foreach { i =>
+    (1 to 10) foreach { i =>
       child ! Counter(i)
     }
     println("sent")
 
     override def receive = {
+      case Terminated(child) =>
+        println(s"${child.path} terminated")
       case _ =>
     }
 
